@@ -1,0 +1,69 @@
+*
+  box-sizing: border-box
+
+gw-input
+  margin: 0
+  padding: 0
+  display: inline-flex
+  flex-wrap: wrap
+  flex-direction: column
+  input
+    border: 1px solid var(--color-border, lightgray)
+    padding: 5px 10px
+    border-radius: var(--border-radius, 0)
+    line-height: calc( var(--form-line-height, 40px) - 2 * var(--form-border-size, 1px) - 10px )
+    &:focus
+      outline: 2px solid lightcyan
+      border-color: var(--color-dark, #333)
+    &:disabled
+      background: var(--form-bg, #fff)  
+    &.invalid
+      border-color: var(--color-error, lightcoral)
+.g-input
+  &__container
+    display: flex
+    flex-wrap: wrap
+    position: relative
+    flex-direction: column
+  &__required
+    position: absolute
+    right: 4px
+    top: 2px
+    display: inline-block
+    font-size: 18px
+  &__element
+    display: grid
+    grid-template-areas: "input"
+    align-items: center
+    position: relative    
+    &.password
+      .g-input__input
+        padding-right: var(--form-line-height, 40px)
+    &.focused .g-input__label
+      transform: translateY(-20px)     
+    &.disabled 
+       opacity: 0.6
+  &__input
+    grid-area: input
+  &__label
+    grid-area: input
+    padding-left: 5px
+    transition: var(--transition, all 0.1s ease-in-out)
+    color: var(--color-placeholder, gray)
+    font-size: var(--form-placeholder-size, 13px)
+    font-family: var(--form-font-family, sans-serif)
+    span
+      background: #fff
+      padding: 0 5px
+  &__password 
+    background: transparent
+    border: none 
+    outline: none
+    position: absolute
+    right: 0
+    top: 0
+    width: var(--form-line-height, 40px)
+    height: var(--form-line-height, 40px)
+    svg 
+      width: var(--icon-size, 20px)
+      height: var(--icon-size, 20px)
