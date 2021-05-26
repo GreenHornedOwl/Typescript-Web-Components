@@ -2,7 +2,7 @@ import {html, css, LitElement} from 'https://cdn.skypack.dev/lit';
 import {customElement, property, state} from 'https://cdn.skypack.dev/lit/decorators.js';
 import {ifDefined} from 'https://cdn.skypack.dev/lit/directives/if-defined.js';
 import {classMap} from 'https://cdn.skypack.dev/lit/directives/class-map.js';
-import "./../css/input.sass"
+// import "./../css/input.sass"
 
 export const isValidEmail = (value: string) => value.indexOf("@") > 0 && value.indexOf(".") > 0 && value.length > 5 && value.indexOf(".") < value.length - 2 && value.indexOf("@") < value.lastIndexOf(".") - 1;
 export const isNumber = (value: string) => RegExp("^[0-9]*$").test(value);
@@ -13,11 +13,114 @@ const hidePassword = () => html`<svg xmlns='http://www.w3.org/2000/svg' viewBox=
 @customElement('gw-input')
 export class GInput extends LitElement {
 
+  static styles=css`
+  :host * {
+    box-sizing: border-box;
+  }
+
+  :host {
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+  }
+  :host input {
+    border: none;
+    padding: 5px 10px;
+    line-height: calc( var(--form-line-height, 40px) - 2 * var(--form-border-size, 1px) - 10px );
+  }
+  :host input:focus {
+    outline: none;
+  }
+  :host input:disabled {
+    background: var(--form-bg, #fff);
+  }
+
+  .g-input__container {
+    display: flex;
+    flex-wrap: wrap;
+    position: relative;
+    flex-direction: column;
+  }
+  .g-input__required {
+    position: absolute;
+    right: 4px;
+    top: 2px;
+    display: inline-block;
+    font-size: 18px;
+  }
+  .g-input__element {
+    border-radius: var(--border-radius, 0);
+    border: var(--form-border-size, 1px) solid var(--form-border-color, var(--color-border,lightgray));
+    display: grid;
+    grid-template-columns: 1fr var(--form-line-height, 40px);
+    align-items: center;
+    position: relative;
+  }
+  .g-input__element.focused .g-input__label {
+    transform: translateY(-20px);
+  }
+  .g-input__element.disabled {
+    opacity: 0.6;
+  }
+  .g-input__element.focusin {
+    border-color: var(--form-focus-color, var(--color-dark, #000));
+  }
+  .g-input__element.invalid {
+    border-color: var(--color-error, lightcoral);
+  }
+  .g-input__input {
+    grid-area: 1/1/2/3;
+    font-family: var(--form-font-family, sans-serif);
+  }
+  .g-input__input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: var(--form-label-color, gray);
+    opacity: 1; /* Firefox */
+  }
+  .password .g-input__input {
+    grid-area: 1/1/2/2;
+  }
+  .g-input__label {
+    grid-area: 1/1/2/3;
+    padding-left: 5px;
+    transition: var(--transition, all 0.1s ease-in-out);
+    color: var(--form-label-color, gray);
+    font-size: var(--form-placeholder-size, 13px);
+    font-family: var(--form-font-family, sans-serif);
+  }
+  .password .g-input__label {    
+    grid-area: 1/1/2/2;
+  }
+  .g-input__label span {
+    background: #fff;
+    padding: 0 5px;
+  }
+  .g-input__password {
+    background: transparent;
+    border: none;
+    outline: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: var(--form-line-height, 40px);
+    height: var(--form-line-height, 40px);
+  }
+  .g-input__password svg {
+    width: var(--icon-size, 20px);
+    height: var(--icon-size, 20px);
+  }
+  `
+
+  static get formAssociated() {return true;}
+  @property() internals = this.attachInternals(); 
+
   @property() name?: string;
   @property({reflect: true}) value: string = "";
   @property() type: "numbers" | "password" | "text" | "email" = "text";
   @property() placeholder?: string;
   @property() label?: string;
+  @property({type: Number}) maxlength?: number;
   @property({type: Boolean}) required: boolean = false;
   @property({type: Boolean}) disabled: boolean = false;
   @property({type: Boolean}) readonly: boolean = false;
@@ -25,6 +128,16 @@ export class GInput extends LitElement {
   @state({type:Boolean}) focused: boolean = false;
   @state({type:Boolean}) password: boolean = false;
   @state({type:Boolean}) passwordshown: boolean = false;
+  @state({type:Boolean}) focusin: boolean = false;
+
+
+  updated(changed: any) {    
+    if(changed.has('value')) {         
+      this.internals.setFormValue(this.value)
+    }
+
+    //super.update(changed);
+  }
 
   onInput = (e: Event) => {      
     this.value = (e.target as HTMLInputElement).value;    
@@ -41,14 +154,11 @@ export class GInput extends LitElement {
   }
   onBlur = (e: Event) => {
     this.focused = this.value !== "";
+    this.focusin = false;
   }
 
   onFocus = (e: Event) => {
     this.focused = true;
-  }
-
-  createRenderRoot() {
-    return this;
   }
 
   firstUpdated() {
@@ -61,17 +171,21 @@ export class GInput extends LitElement {
     this.type = this.passwordshown ? "text" : "password";
   }
 
-  render() {
-    const classes = { invalid: this.invalid};
-    const elementClasses = {focused: this.focused, disabled: this.disabled, password: this.password};
+  onFocusin = (e: Event) => {
+    this.focusin = true;
+    this.invalid = false;
+  }
+
+  render() {   
+    const elementClasses = {focused: this.focused, disabled: this.disabled, password: this.password,focusin: this.focusin,invalid: this.invalid};
     return html`
-      <div class="g-input__container">
-      ${this.required ? html`<span class="g-input__required">*</span>`: null} 
-      <div class="g-input__element ${classMap(elementClasses)}">
-        <input type=${this.type === "numbers" ? "text": this.type} id='${ifDefined(this.name)}__id' name=${ifDefined(this.name)} class='g-input__input ${classMap(classes)}' .value=${this.value} placeholder=${ifDefined(this.placeholder)} ?required=${this.required} ?disabled=${this.disabled} ?readonly=${this.readonly} @input=${(e: Event)=>this.onInput(e)} @keydown=${(e: KeyboardEvent)=>this.onKeydown(e)}  @change=${(e: Event) => this.onChange(e)} @blur=${(e: Event) => this.onBlur(e)} @focus=${(e: Event)=>this.onFocus(e)} tabindex="0" />
-        ${this.label ? html`<label class="g-input__label" for='${this.name}__id'><span>${this.label}</span></label>`: null}
-        ${this.password ? html`<button type="button" class="g-input__password" @click=${(e: Event)=>this.changePasswordVisibility(e)}>${this.passwordshown ? hidePassword() : showPassword()}</button>`: null}
-      </div>      
+      <div class="g-input__container">     
+        <div class="g-input__element ${classMap(elementClasses)}">
+          <input type=${this.type === "numbers" ? "text": this.type} id='${ifDefined(this.name)}__id' name=${ifDefined(this.name)} class='g-input__input' .value=${this.value} placeholder=${ifDefined(this.placeholder)} ?required=${this.required} ?disabled=${this.disabled} ?readonly=${this.readonly} @input=${(e: Event)=>this.onInput(e)} @keydown=${(e: KeyboardEvent)=>this.onKeydown(e)}  @change=${(e: Event) => this.onChange(e)} @blur=${(e: Event) => this.onBlur(e)} @focus=${(e: Event)=>this.onFocus(e)} tabindex="0" @focusin=${(e: Event)=>this.onFocusin(e)} maxlength=${ifDefined(this.maxlength)} autocomplete="off" />
+          ${this.label ? html`<label class="g-input__label" for='${this.name}__id'><span>${this.label}</span></label>`: null}
+          ${this.password ? html`<button type="button" class="g-input__password" @click=${(e: Event)=>this.changePasswordVisibility(e)}>${this.passwordshown ? hidePassword() : showPassword()}</button>`: null}
+        </div>      
+        ${this.required ? html`<span class="g-input__required">*</span>`: null} 
       </div>
       `
   }

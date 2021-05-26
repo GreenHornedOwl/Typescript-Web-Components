@@ -1,4 +1,7 @@
-import confetti from 'https://cdn.skypack.dev/canvas-confetti'; 
-import "./components/simple-greeting";
 import "./components/input";
-confetti();
+import "./components/select";
+
+document.querySelector("form").addEventListener("submit",e=>{
+  e.preventDefault();
+  console.log(Object.fromEntries(new FormData(e.currentTarget)));
+})
