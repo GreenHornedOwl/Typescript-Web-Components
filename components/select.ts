@@ -15,10 +15,14 @@ export class GOption extends LitElement {
   .g-option {padding: 10px 10px; width: 100%;}
   .g-option:hover {background: var(--gw-option-hover, whitesmoke);}
   ` 
+ 
+  handleClick = (e: Event) => {
+    this.dispatchEvent(new CustomEvent('optionselected', {bubbles: true,cancelable:true, detail: {value: this.value} }));
+  }
 
   render() {
     return html`
-     <div class="g-option"><slot></slot></div>
+     <div class="g-option" @click=${(e: Event)=>this.handleClick()}><slot></slot></div>
     `
   }
 }  
@@ -56,17 +60,23 @@ export class GSelect extends LitElement {
   }
 
   updated(changed: any) {    
-    if(changed.has('value')) {       
+    if(changed.has('value')) {          
       this.internals.setFormValue(this.value)
     }
 
     //super.update(changed);
   }
 
+  handleOptionSelected = (e: CustomEvent) =>{
+    let {detail} = e;
+    let {value} = detail;
+    this.value = value;
+  }
+
   render() {
     const listClasses = {opened: this.opened};
     return html`
-    <div class="g-select">
+    <div class="g-select" @optionselected=${(e:CustomEvent)=>this.handleOptionSelected(e)}>
       <div class="g-select__value">${this.selectedOption}</div>
       <div class="g-select__icon" @click=${()=>this.opened = !this.opened}>${this.opened ? openedIcon() : closedIcon()}</div>
       <div class="g-select__list ${classMap(listClasses)}">
