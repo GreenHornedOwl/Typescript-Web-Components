@@ -33,15 +33,12 @@ export class GInput extends LitElement {
   :host input:focus {
     outline: none;
   }
-  :host input:disabled {
+  /* :host input:disabled {
     background: var(--form-bg, #fff);
-  }
+  } */
 
   .g-input__container {
-    display: flex;
-    flex-wrap: wrap;
     position: relative;
-    flex-direction: column;
   }
   .g-input__required {
     position: absolute;
@@ -56,13 +53,17 @@ export class GInput extends LitElement {
     display: grid;
     grid-template-columns: 1fr var(--form-line-height, 40px);
     align-items: center;
-    position: relative;
+    position: relative;  
+    background: var(--form-bg-color, inherit) 
+  }
+  .g-input__element input {
+    background-color: transparent
   }
   .g-input__element.focused .g-input__label {
     transform: translateY(-20px);
   }
   .g-input__element.disabled {
-    opacity: 0.6;
+    opacity: 0.6;    
   }
   .g-input__element.focusin {
     border-color: var(--form-focus-color, var(--color-dark, #000));
@@ -70,9 +71,17 @@ export class GInput extends LitElement {
   .g-input__element.invalid {
     border-color: var(--color-error, lightcoral);
   }
+  .g-input__element.invalid input {
+    color: var(--color-error, lightcoral);
+  }
+  .g-input__element.readonly input, .g-input__element.disabled input {
+    cursor: not-allowed;
+    user-select: none;
+  }
   .g-input__input {
     grid-area: 1/1/2/3;
     font-family: var(--form-font-family, sans-serif);
+    z-index: 1;
   }
   .g-input__input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
     color: var(--form-label-color, gray);
@@ -87,7 +96,7 @@ export class GInput extends LitElement {
     transition: var(--transition, all 0.1s ease-in-out);
     color: var(--form-label-color, gray);
     font-size: var(--form-placeholder-size, 13px);
-    font-family: var(--form-font-family, sans-serif);
+    font-family: var(--form-font-family, sans-serif);   
   }
   .password .g-input__label {    
     grid-area: 1/1/2/2;
@@ -177,12 +186,12 @@ export class GInput extends LitElement {
   }
 
   render() {   
-    const elementClasses = {focused: this.focused, disabled: this.disabled, password: this.password,focusin: this.focusin,invalid: this.invalid};
+    const elementClasses = {focused: this.focused, disabled: this.disabled, password: this.password,focusin: this.focusin,invalid: this.invalid, readonly: this.readonly};
     return html`
       <div class="g-input__container">     
-        <div class="g-input__element ${classMap(elementClasses)}">
-          <input type=${this.type === "numbers" ? "text": this.type} id='${ifDefined(this.name)}__id' name=${ifDefined(this.name)} class='g-input__input' .value=${this.value} placeholder=${ifDefined(this.placeholder)} ?required=${this.required} ?disabled=${this.disabled} ?readonly=${this.readonly} @input=${(e: Event)=>this.onInput(e)} @keydown=${(e: KeyboardEvent)=>this.onKeydown(e)}  @change=${(e: Event) => this.onChange(e)} @blur=${(e: Event) => this.onBlur(e)} @focus=${(e: Event)=>this.onFocus(e)} tabindex="0" @focusin=${(e: Event)=>this.onFocusin(e)} maxlength=${ifDefined(this.maxlength)} autocomplete="off" />
+        <div class="g-input__element ${classMap(elementClasses)}">          
           ${this.label ? html`<label class="g-input__label" for='${this.name}__id'><span>${this.label}</span></label>`: null}
+          <input type=${this.type === "numbers" ? "text": this.type} id='${ifDefined(this.name)}__id' name=${ifDefined(this.name)} class='g-input__input' .value=${this.value} placeholder=${ifDefined(this.placeholder)} ?required=${this.required} ?disabled=${this.disabled} ?readonly=${this.readonly} @input=${(e: Event)=>this.onInput(e)} @keydown=${(e: KeyboardEvent)=>this.onKeydown(e)}  @change=${(e: Event) => this.onChange(e)} @blur=${(e: Event) => this.onBlur(e)} @focus=${(e: Event)=>this.onFocus(e)} tabindex="0" @focusin=${(e: Event)=>this.onFocusin(e)} maxlength=${ifDefined(this.maxlength)} autocomplete="off" />
           ${this.password ? html`<button type="button" class="g-input__password" @click=${(e: Event)=>this.changePasswordVisibility(e)}>${this.passwordshown ? hidePassword() : showPassword()}</button>`: null}
         </div>      
         ${this.required ? html`<span class="g-input__required">*</span>`: null} 
